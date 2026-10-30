@@ -60,15 +60,10 @@ uint16_t hashSsid(const uint8_t *ssid, size_t length)
 
 bool isPineappleOui(const uint8_t *mac, bool openNetwork)
 {
-    const uint32_t oui = (static_cast<uint32_t>(mac[0]) << 16) |
-                         (static_cast<uint32_t>(mac[1]) << 8) | mac[2];
-    switch (oui) {
-    case 0x001337: case 0x02C0CA: case 0x021337: case 0x000A00:
-    case 0x000C43: case 0x000CE7: case 0x0017A5: case 0x9CEFD5:
-    case 0x9CE5D5: case 0xDEADBE: return true;
-    case 0x00C0CA: case 0x1CBFCE: case 0x0CEFAF: return openNetwork;
-    default: return false;
-    }
+    if (mac == nullptr) return false;
+    for (const PineappleOuiSignature &sig : kPineappleOuis)
+        if (memcmp(mac, sig.oui, 3) == 0) return !sig.openNetworkOnly || openNetwork;
+    return false;
 }
 
 const OuiSignature *lookupOui(const uint8_t *mac)

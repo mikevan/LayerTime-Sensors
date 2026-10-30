@@ -24,10 +24,13 @@ void oui_table_has_no_duplicate_prefixes()
         const uint32_t oui = (uint32_t(s.oui[0]) << 16) | (uint32_t(s.oui[1]) << 8) | s.oui[2];
         CHECK_TRUE(seen.insert(oui).second);
     }
-    CHECK_INT(39, seen.size());
+    CHECK_INT(55, seen.size());
 }
 
-void oui_confidence_split_is_20_flock_high_3_axon_high_16_flock_low()
+// Since 1.1.0 (upstream review R1, decided 2026-10-29): only Flock Safety's
+// own registered prefix is High; the 19 module-maker rows that were High
+// are Low, and 16 field-list rows were added at Low.
+void oui_confidence_split_is_1_flock_high_3_axon_high_51_flock_low()
 {
     int flockHigh = 0, axonHigh = 0, flockLow = 0, other = 0;
     for (const OuiSignature &s : kOuiSignatures) {
@@ -36,10 +39,49 @@ void oui_confidence_split_is_20_flock_high_3_axon_high_16_flock_low()
         else if (s.detector == DetectorId::Flock && s.confidence == Confidence::Low) ++flockLow;
         else ++other;
     }
-    CHECK_INT(20, flockHigh);
+    CHECK_INT(1, flockHigh);
     CHECK_INT(3, axonHigh);
-    CHECK_INT(16, flockLow);
+    CHECK_INT(51, flockLow);
     CHECK_INT(0, other);
+}
+
+void the_only_high_flock_prefix_is_flock_safetys_own()
+{
+    for (const OuiSignature &s : kOuiSignatures) {
+        if (s.detector != DetectorId::Flock || s.confidence != Confidence::High) continue;
+        CHECK_INT(0xB4, s.oui[0]);
+        CHECK_INT(0x1E, s.oui[1]);
+        CHECK_INT(0x52, s.oui[2]);
+    }
+}
+
+// The Pineapple list moved from a switch statement into a table in 1.1.0 so
+// each row can carry its provenance. Matching must be exactly what 1.0.0
+// did: these ten match on any network, these three only on an open one.
+void pineapple_table_matches_the_1_0_0_list_exactly()
+{
+    const uint32_t always[] = {0x001337, 0x02C0CA, 0x021337, 0x000A00, 0x000C43,
+                               0x000CE7, 0x0017A5, 0x9CEFD5, 0x9CE5D5, 0xDEADBE};
+    const uint32_t openOnly[] = {0x00C0CA, 0x1CBFCE, 0x0CEFAF};
+    auto mac = [](uint32_t oui, uint8_t *m) {
+        m[0] = uint8_t(oui >> 16); m[1] = uint8_t(oui >> 8); m[2] = uint8_t(oui);
+        m[3] = 0x12; m[4] = 0x34; m[5] = 0x56;
+    };
+    uint8_t m[6];
+    for (uint32_t oui : always) {
+        mac(oui, m);
+        CHECK_TRUE(isPineappleOui(m, false));
+        CHECK_TRUE(isPineappleOui(m, true));
+    }
+    for (uint32_t oui : openOnly) {
+        mac(oui, m);
+        CHECK_FALSE(isPineappleOui(m, false));
+        CHECK_TRUE(isPineappleOui(m, true));
+    }
+    CHECK_INT(13, sizeof(kPineappleOuis) / sizeof(kPineappleOuis[0]));
+    mac(0x001338, m);
+    CHECK_FALSE(isPineappleOui(m, true));
+    CHECK_FALSE(isPineappleOui(nullptr, true));
 }
 
 void lookup_reads_the_first_three_bytes_given()
@@ -94,7 +136,9 @@ int main(int argc, char **argv)
     CHECK_MAIN(argc, argv);
     CASE(company_ids_and_proximity_pairing_switch);
     CASE(oui_table_has_no_duplicate_prefixes);
-    CASE(oui_confidence_split_is_20_flock_high_3_axon_high_16_flock_low);
+    CASE(oui_confidence_split_is_1_flock_high_3_axon_high_51_flock_low);
+    CASE(the_only_high_flock_prefix_is_flock_safetys_own);
+    CASE(pineapple_table_matches_the_1_0_0_list_exactly);
     CASE(lookup_reads_the_first_three_bytes_given);
     CASE(ssid_prefixes_are_the_four_axon_prefixes);
     CASE(ssid_prefix_handles_non_letters_and_empty);

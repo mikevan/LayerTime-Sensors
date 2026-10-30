@@ -17,7 +17,7 @@ command -v "$CXX" >/dev/null 2>&1 || { echo "run_tests: no host C++ compiler ($C
 scratch="$(mktemp -d)"; trap 'rm -rf "$scratch"' EXIT
 iso="$scratch/LayerTime-Sensors"
 mkdir -p "$iso"
-cp -R "$here/src" "$here/test" "$here/tools" "$here/library.json" "$iso/"
+cp -R "$here/src" "$here/test" "$here/tools" "$here/sources" "$here/library.json" "$iso/"
 
 echo "LayerTime-Sensors tests, isolated copy in $iso"
 echo "compiler: $("$CXX" --version | head -n1)"

@@ -16,7 +16,7 @@ any embedded build that accepts a library.
 | 5 | Deauth | Wi-Fi | A burst of deauth or disassoc frames from one transmitter (6 in 3 s, 15 s cooldown) |
 | 6 | Pwnagotchi | Wi-Fi | The published Pwnagotchi beacon BSSID |
 | 7 | MultiSSID | Wi-Fi | Two or more confirmed network names from one BSSID |
-| 8 | Flock | BLE and Wi-Fi | Flock vendor prefixes, and the XUNTONG BLE module gated on a Flock-shaped name |
+| 8 | Flock | BLE and Wi-Fi | Flock Safety's registered prefix (High), module-maker prefixes seen on Flock units (Low), and the XUNTONG BLE module gated on a Flock-shaped name |
 | 9 | Pineapple | Wi-Fi | Hak5 Pineapple vendor prefixes |
 | 10 | AirTag | BLE | Apple Find My offline-finding beacons |
 | 11 | Flipper | BLE | Flipper Zero service UUIDs |
@@ -34,6 +34,15 @@ assuming a range.
 Every match carries a `Confidence` (Low, Medium, High). Low means "worth
 logging, not worth an alert": for example, the generic Espressif prefixes that
 some Flock units use but every ESP32 dev board also uses.
+
+## Sources
+
+Every signature here came from someone else's open-source work, and every
+row says whose. [SOURCES.md](SOURCES.md) names and thanks each project,
+[`sources/registry.json`](sources/registry.json) tracks the commits we last
+reviewed, and `test_sources` checks every vendor claim against the IEEE and
+Bluetooth SIG registries. What changed in each release, and which upstream
+commit it came from, is in [CHANGELOG.md](CHANGELOG.md).
 
 ## Use
 
@@ -56,6 +65,9 @@ wifi.classify(frame, length, rssi, channel, nowMs, enabled, onCandidate, nullptr
 ```
 
 A detector outside `enabled` is not evaluated and keeps no state.
+
+The full API, with working NimBLE and ESP-IDF adapters, what each confidence
+level means for alerts, and the threading rules, is in [API.md](API.md).
 
 ## Tests
 

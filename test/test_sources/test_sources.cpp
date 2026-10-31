@@ -181,6 +181,8 @@ void every_row_names_a_recorded_source_and_commit()
         add(provenanceProblem("Company " + hex4(s.id), s.provenance, ids, json));
     for (const SsidPrefixSignature &s : kSsidPrefixes)
         add(provenanceProblem(std::string("SSID ") + s.prefix, s.provenance, ids, json));
+    for (const BleNamePrefixSignature &s : kBleNamePrefixes)
+        add(provenanceProblem(std::string("Name ") + s.prefix, s.provenance, ids, json));
     report(problems);
 }
 
@@ -243,6 +245,8 @@ void high_rows_rest_on_registry_or_field_evidence()
         check("UUID " + hex4(s.uuid), s.confidence, s.provenance.evidence);
     for (const SsidPrefixSignature &s : kSsidPrefixes)
         check(std::string("SSID ") + s.prefix, s.confidence, s.provenance.evidence);
+    for (const BleNamePrefixSignature &s : kBleNamePrefixes)
+        check(std::string("Name ") + s.prefix, s.confidence, s.provenance.evidence);
     for (const char *p : kHighPendingReview)
         if (stillPending.count(p) == 0)
             problems.push_back(std::string(p) + " is no longer High on a single source; remove it from kHighPendingReview");

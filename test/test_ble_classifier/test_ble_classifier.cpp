@@ -166,6 +166,60 @@ void no_name_falls_back_to_signature_labels()
     }
 }
 
+// Upstream review R15b: Kismet's "Axon-X" body-camera name, at Medium.
+void axon_x_name_is_axon_at_medium()
+{
+    Advert a;
+    a.name = "Axon-X1A2B";
+    auto s = classify(a, DetectorSet::all());
+    CHECK_INT(1, s.size());
+    if (s.size() == 1) {
+        CHECK_INT(static_cast<int>(DetectorId::Axon), static_cast<int>(s[0].d));
+        CHECK_INT(static_cast<int>(Confidence::Medium), static_cast<int>(s[0].c));
+        CHECK_STR("Axon-X1A2B", s[0].detail.c_str());
+        CHECK_INT(0, s[0].channel);
+    }
+    a.name = "axon-x1a2b";
+    CHECK_INT(1, classify(a, only(DetectorId::Axon)).size());
+}
+
+void near_axon_names_are_not_axon()
+{
+    Advert a;
+    for (const char *n : {"Axon", "Axon-", "Axon-Y1", "Axonics", "My Axon-X", ""}) {
+        a.name = n;
+        CHECK_INT(0, classify(a, DetectorSet::all()).size());
+    }
+}
+
+void axon_name_is_silent_when_axon_is_off()
+{
+    Advert a;
+    a.name = "Axon-X1A2B";
+    CHECK_INT(0, classify(a, only(DetectorId::Flock)).size());
+}
+
+// Upstream review R15c: Kismet's locally administered Axon prefix, at Low.
+// With an Axon-X name as well, the address match comes first, then the name.
+void axon_address_then_axon_name()
+{
+    Advert a;
+    a.bytes[0] = 0x12; a.bytes[1] = 0x20; a.bytes[2] = 0x13;
+    auto s = classify(a, DetectorSet::all());
+    CHECK_INT(1, s.size());
+    if (s.size() == 1) {
+        CHECK_INT(static_cast<int>(Confidence::Low), static_cast<int>(s[0].c));
+        CHECK_STR("Axon? (locally administered)", s[0].detail.c_str());
+    }
+    a.name = "Axon-X1A2B";
+    s = classify(a, DetectorSet::all());
+    CHECK_INT(2, s.size());
+    if (s.size() == 2) {
+        CHECK_INT(static_cast<int>(Confidence::Low), static_cast<int>(s[0].c));
+        CHECK_INT(static_cast<int>(Confidence::Medium), static_cast<int>(s[1].c));
+    }
+}
+
 void nothing_is_reported_for_an_empty_scan()
 {
     Advert a;
@@ -185,6 +239,10 @@ int main(int argc, char **argv)
     CASE(a_uuid_outside_the_scan_is_dropped_not_retried);
     CASE(name_length_is_honoured_even_with_an_embedded_nul);
     CASE(no_name_falls_back_to_signature_labels);
+    CASE(axon_x_name_is_axon_at_medium);
+    CASE(near_axon_names_are_not_axon);
+    CASE(axon_name_is_silent_when_axon_is_off);
+    CASE(axon_address_then_axon_name);
     CASE(nothing_is_reported_for_an_empty_scan);
     CHECK_SUMMARY();
 }

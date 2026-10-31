@@ -113,6 +113,21 @@
       "notes": "SquachWatch-CYD ported its AirTag payload check from nyanBOX; the Find My subtype rule reached this library through that port."
     },
     {
+      "id": "kismet",
+      "name": "Kismet",
+      "url": "https://github.com/kismetwireless/kismet",
+      "author": "Mike Kershaw (dragorn) and contributors",
+      "license": "GPL-2.0",
+      "use": "data-only",
+      "role": "integrated",
+      "feeds": ["Axon"],
+      "upstream_seen_sha": "c0cdc68341c239aa4045a17d821d9d09473e433c",
+      "last_reviewed_sha": "c0cdc68341c239aa4045a17d821d9d09473e433c",
+      "last_reviewed": "2026-10-30",
+      "integrated_sha": "f62be8498b4b668c8975c319b17dd73d04f92963",
+      "notes": "conf/kismet_device_rules_highlights.txt tags body cameras by 00:25:df, 12:20:13, or a name starting Axon-X (f62be8498b4b668c8975c319b17dd73d04f92963). Review began with the commits of 2026-10-29 and 2026-10-30. Also a reference for evil-twin and rogue-AP alerts (catalog Tier 3)."
+    },
+    {
       "id": "gainsec",
       "name": "GainSec Flock research",
       "url": "https://github.com/GainSec",

@@ -89,6 +89,16 @@ void classifyBleAdvert(const BleAdvertSource &advert, const DetectorSet &enabled
             break;
         }
     }
+
+    // ---- device-name prefixes ----
+    if (label != nullptr) {
+        for (const BleNamePrefixSignature &sig : kBleNamePrefixes) {
+            if (!nameHasPrefix(name, sig.prefix)) continue;
+            if (!enabled.contains(sig.detector)) break;
+            emit(sink, sinkContext, sig.detector, label, address, rssi, sig.confidence);
+            break;
+        }
+    }
 }
 
 } // namespace lts

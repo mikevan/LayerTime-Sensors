@@ -3,6 +3,30 @@
 Every change names the upstream work behind it. See [SOURCES.md](SOURCES.md)
 for who those people are.
 
+## 1.1.1
+
+### Detection changes
+
+- **Axon: Bluetooth names starting with `Axon-X` are now Axon, at
+  Medium.** New `kBleNamePrefixes` table, matched without regard to case
+  against the advertised name. On Wi-Fi the same name was already caught by
+  the `AXON-` SSID prefix. From Kismet's default "bodycam" rule,
+  [`f62be84`](https://github.com/kismetwireless/kismet/commit/f62be8498b4b668c8975c319b17dd73d04f92963).
+  Medium, not High, because no capture is published. Upstream review R15b.
+- **Axon: `12:20:13` added at Low.** From the same Kismet rule. The prefix
+  is locally administered, so no vendor owns it and anyone can use it:
+  logged, never an alert. Upstream review R15c.
+- Kismet's rule also matches `00:25:DF`, Axon Enterprise's registered
+  prefix, which this library already has at High. That gives it a second,
+  independent source.
+
+### Provenance
+
+- Kismet added to `sources/registry.json` and `SOURCES.md` as a data-only
+  source (GPL-2.0). Upstream review R15a.
+- `test_sources` checks the new name table the same way as every other
+  table.
+
 ## 1.1.0
 
 ### Detection changes

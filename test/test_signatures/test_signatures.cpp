@@ -24,25 +24,60 @@ void oui_table_has_no_duplicate_prefixes()
         const uint32_t oui = (uint32_t(s.oui[0]) << 16) | (uint32_t(s.oui[1]) << 8) | s.oui[2];
         CHECK_TRUE(seen.insert(oui).second);
     }
-    CHECK_INT(55, seen.size());
+    CHECK_INT(56, seen.size());
 }
 
 // Since 1.1.0 (upstream review R1, decided 2026-10-29): only Flock Safety's
 // own registered prefix is High; the 19 module-maker rows that were High
-// are Low, and 16 field-list rows were added at Low.
-void oui_confidence_split_is_1_flock_high_3_axon_high_51_flock_low()
+// are Low, and 16 field-list rows were added at Low. Since 1.1.1 (R15c):
+// Kismet's locally administered Axon prefix, at Low.
+void oui_confidence_split_is_1_flock_high_3_axon_high_51_flock_low_1_axon_low()
 {
-    int flockHigh = 0, axonHigh = 0, flockLow = 0, other = 0;
+    int flockHigh = 0, axonHigh = 0, flockLow = 0, axonLow = 0, other = 0;
     for (const OuiSignature &s : kOuiSignatures) {
         if (s.detector == DetectorId::Flock && s.confidence == Confidence::High) ++flockHigh;
         else if (s.detector == DetectorId::Axon && s.confidence == Confidence::High) ++axonHigh;
         else if (s.detector == DetectorId::Flock && s.confidence == Confidence::Low) ++flockLow;
+        else if (s.detector == DetectorId::Axon && s.confidence == Confidence::Low) ++axonLow;
         else ++other;
     }
     CHECK_INT(1, flockHigh);
     CHECK_INT(3, axonHigh);
     CHECK_INT(51, flockLow);
+    CHECK_INT(1, axonLow);
     CHECK_INT(0, other);
+}
+
+void the_locally_administered_axon_prefix_is_low()
+{
+    const uint8_t mac[] = {0x12, 0x20, 0x13, 0x01, 0x02, 0x03};
+    const OuiSignature *s = lookupOui(mac);
+    CHECK_TRUE(s != nullptr);
+    if (s) {
+        CHECK_INT(static_cast<int>(DetectorId::Axon), static_cast<int>(s->detector));
+        CHECK_INT(static_cast<int>(Confidence::Low), static_cast<int>(s->confidence));
+        CHECK_STR("Axon? (locally administered)", s->label);
+    }
+}
+
+void ble_name_prefixes_are_the_one_axon_prefix()
+{
+    CHECK_INT(1, sizeof(kBleNamePrefixes) / sizeof(kBleNamePrefixes[0]));
+    CHECK_STR("Axon-X", kBleNamePrefixes[0].prefix);
+    CHECK_INT(static_cast<int>(DetectorId::Axon), static_cast<int>(kBleNamePrefixes[0].detector));
+    CHECK_INT(static_cast<int>(Confidence::Medium), static_cast<int>(kBleNamePrefixes[0].confidence));
+}
+
+void name_prefix_ignores_case_and_checks_length()
+{
+    CHECK_TRUE(nameHasPrefix("Axon-X12", "Axon-X"));
+    CHECK_TRUE(nameHasPrefix("AXON-x12", "Axon-X"));
+    CHECK_TRUE(nameHasPrefix("Axon-X", "Axon-X"));
+    CHECK_FALSE(nameHasPrefix("Axon-", "Axon-X"));
+    CHECK_FALSE(nameHasPrefix("Axonics", "Axon-X"));
+    CHECK_FALSE(nameHasPrefix("My Axon-X", "Axon-X"));
+    CHECK_FALSE(nameHasPrefix("", "Axon-X"));
+    CHECK_FALSE(nameHasPrefix("Axon-X", nullptr));
 }
 
 void the_only_high_flock_prefix_is_flock_safetys_own()
@@ -136,7 +171,10 @@ int main(int argc, char **argv)
     CHECK_MAIN(argc, argv);
     CASE(company_ids_and_proximity_pairing_switch);
     CASE(oui_table_has_no_duplicate_prefixes);
-    CASE(oui_confidence_split_is_1_flock_high_3_axon_high_51_flock_low);
+    CASE(oui_confidence_split_is_1_flock_high_3_axon_high_51_flock_low_1_axon_low);
+    CASE(the_locally_administered_axon_prefix_is_low);
+    CASE(ble_name_prefixes_are_the_one_axon_prefix);
+    CASE(name_prefix_ignores_case_and_checks_length);
     CASE(the_only_high_flock_prefix_is_flock_safetys_own);
     CASE(pineapple_table_matches_the_1_0_0_list_exactly);
     CASE(lookup_reads_the_first_three_bytes_given);

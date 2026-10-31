@@ -126,7 +126,7 @@ Everything is in `namespace lts`.
 | 10 | `AirTag` | BLE | Apple Find My offline-finding beacons |
 | 11 | `Flipper` | BLE | Flipper Zero service UUIDs |
 | 12 | `Meta` | BLE | Meta Ray-Ban and Meta service UUIDs |
-| 13 | `Axon` | BLE and Wi-Fi | Axon prefixes and body-camera pairing SSIDs |
+| 13 | `Axon` | BLE and Wi-Fi | Axon prefixes, body-camera pairing SSIDs, and body-camera Bluetooth names |
 | 14 | `Tile` | BLE | Tile service UUIDs |
 | 15 | `SamsungTag` | BLE | Samsung SmartTag service UUID |
 | 16 | `GoogleTag` | BLE | Google Find My Device (Eddystone) UUID |
@@ -230,7 +230,8 @@ all up front.
 | `context` | Passed to both callbacks unchanged |
 
 Matches are reported in this order: manufacturer records (Find My, Flock's
-battery-pack radio), then the address prefix, then service UUIDs.
+battery-pack radio), then the address prefix, then service UUIDs, then the
+device name.
 
 **Address byte order.** The library reads the vendor prefix from
 `addressBytes[0]` to `addressBytes[2]`, the same order the address is printed
@@ -387,6 +388,7 @@ Display them, export them, or check your own data against them.
 | `kBleUuidSignatures` | `BleUuidSignature` | 16-bit service UUIDs |
 | `kCompanyIdSignatures` | `CompanyIdSignature` | Bluetooth company IDs |
 | `kSsidPrefixes` | `SsidPrefixSignature` | Network name prefixes |
+| `kBleNamePrefixes` | `BleNamePrefixSignature` | Bluetooth device-name prefixes |
 
 Every row carries a `Provenance`:
 

@@ -261,6 +261,12 @@ inline constexpr OuiSignature kOuiSignatures[] = {
      {"squachwatch-cyd", "b3e96f7", "1.0.0", Evidence::SingleSource}},
     {{0x28,0x24,0xFF}, DetectorId::Axon, Confidence::High, "Axon Signal", "WNC Corporation",
      {"squachwatch-cyd", "b3e96f7", "1.0.0", Evidence::SingleSource}},
+    // Kismet's default "bodycam" rule (f62be84) also matches 12:20:13. Its
+    // locally administered bit is set, so no vendor owns it and anyone can
+    // use it; most likely a fixed default address in an Axon product. No
+    // capture is published, so Low: logged, never an alert (review R15c).
+    {{0x12,0x20,0x13}, DetectorId::Axon, Confidence::Low, "Axon? (locally administered)", kLocallyAdministered,
+     {"kismet", "f62be84", "1.1.1", Evidence::SingleSource}},
     // --- Flock, generic Espressif blocks: LOW, log-only, no alert ---
     // SquachWatch-CYD labelled these Flock-ESP32/-S3/-C6 and removed them
     // in 10f4da6; kept here at Low by decision 2026-10-29 (review R2).
@@ -370,5 +376,26 @@ inline constexpr SsidPrefixSignature kSsidPrefixes[] = {
 // The SSID in a beacon is not null-terminated, so this compares against the
 // raw bytes and length rather than reaching for strncasecmp.
 bool ssidHasPrefix(const uint8_t *ssid, uint8_t ssidLength, const char *prefix);
+
+// Bluetooth device-name prefixes, matched case-insensitively against the
+// advertised name. Kept apart from kSsidPrefixes: a Bluetooth name and a
+// network name are different fields on different radios.
+struct BleNamePrefixSignature {
+    const char *prefix;
+    DetectorId detector;
+    Confidence confidence;
+    Provenance provenance;
+};
+
+inline constexpr BleNamePrefixSignature kBleNamePrefixes[] = {
+    // Kismet's default "bodycam" rule (f62be84) tags a device whose name
+    // starts with "Axon-X". No capture is published, so Medium, not High.
+    // On Wi-Fi the same name is already caught by the "AXON-" SSID prefix
+    // (review R15b).
+    {"Axon-X", DetectorId::Axon, Confidence::Medium,
+     {"kismet", "f62be84", "1.1.1", Evidence::SingleSource}},
+};
+
+bool nameHasPrefix(const std::string &name, const char *prefix);
 
 } // namespace lts

@@ -24,6 +24,7 @@ The machine-readable version of this page is
 | [Evil-M5Project](https://github.com/7h30th3r0n3/Evil-M5Project) | 7h30th3r0n3 | None stated | Confirmed the Flipper UUIDs. Data only. |
 | [nyanBOX](https://github.com/jbohack/nyanBOX) | jbohack | Custom | The AirTag payload check that SquachWatch-CYD ported, which is where our Find My rule comes from. Data only. |
 | [GainSec](https://github.com/GainSec) | Jon "GainSec" Gaines | n/a | Credited by nite-oui-collection with the original Flock prefix list. |
+| [Kismet](https://github.com/kismetwireless/kismet) | Mike Kershaw (dragorn) and contributors | GPL-2.0 | The Axon body-camera name `Axon-X` and address `12:20:13`, and a second, independent source for Axon's registered prefix. Data only. |
 | [Wireshark](https://github.com/wireshark/wireshark) | The Wireshark project | GPL-2.0 | Weekly copies of the IEEE and Bluetooth SIG registries, which is how every vendor claim here gets checked. Data only. |
 
 The registries themselves belong to the

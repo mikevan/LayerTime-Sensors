@@ -18,8 +18,8 @@
 #pragma once
 
 // Classifies one BLE advertisement for the BLE detectors: Find My trackers,
-// Flock's radio module, vendor OUI on the address, and known 16-bit service
-// UUIDs. Scanning, and pulling fields out of the BLE stack's advertisement
+// Flock's radio module, vendor OUI on the address, known 16-bit service
+// UUIDs, and known device-name prefixes. Scanning, and pulling fields out of the BLE stack's advertisement
 // object, are the caller's job; this only reads the fields handed to it.
 
 #include <stddef.h>
@@ -57,7 +57,7 @@ struct BleAdvertSource {
 };
 
 // Reports each match whose detector is in `enabled`, in this order:
-// manufacturer records, then the address OUI, then UUIDs.
+// manufacturer records, then the address OUI, then UUIDs, then the name.
 void classifyBleAdvert(const BleAdvertSource &advert, const DetectorSet &enabled,
                        CandidateSink sink, void *sinkContext);
 

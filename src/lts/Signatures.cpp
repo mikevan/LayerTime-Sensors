@@ -88,4 +88,19 @@ bool ssidHasPrefix(const uint8_t *ssid, uint8_t ssidLength, const char *prefix)
     return true;
 }
 
+bool nameHasPrefix(const std::string &name, const char *prefix)
+{
+    if (prefix == nullptr) return false;
+    const size_t n = strlen(prefix);
+    if (name.size() < n) return false;
+    for (size_t i = 0; i < n; ++i) {
+        char a = name[i];
+        char b = prefix[i];
+        if (a >= 'a' && a <= 'z') a = static_cast<char>(a - 32);
+        if (b >= 'a' && b <= 'z') b = static_cast<char>(b - 32);
+        if (a != b) return false;
+    }
+    return true;
+}
+
 } // namespace lts

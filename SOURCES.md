@@ -23,6 +23,7 @@ The machine-readable version of this page is
 | [wall-of-flipper](https://github.com/7h30th3r0n3/wall-of-flipper) | 7h30th3r0n3 | None stated | Confirmed the Flipper UUIDs, and lists Flipper address prefixes. Data only. |
 | [Evil-M5Project](https://github.com/7h30th3r0n3/Evil-M5Project) | 7h30th3r0n3 | None stated | Confirmed the Flipper UUIDs. Data only. |
 | [nyanBOX](https://github.com/jbohack/nyanBOX) | jbohack | Custom | The AirTag payload check that SquachWatch-CYD ported, which is where our Find My rule comes from. Data only. |
+| [AirGuard](https://github.com/seemoo-lab/AirGuard) | Secure Mobile Networking Lab (SEEMOO), TU Darmstadt | Apache-2.0 | How to tell a real AirTag from every other Apple device: the device-type bits in the Find My status byte, and the length that means a tag is away from its owner. Release 1.1.2 is built on it. |
 | [GainSec](https://github.com/GainSec) | Jon "GainSec" Gaines | n/a | Credited by nite-oui-collection with the original Flock prefix list. |
 | [Kismet](https://github.com/kismetwireless/kismet) | Mike Kershaw (dragorn) and contributors | GPL-2.0 | The Axon body-camera name `Axon-X` and address `12:20:13`, and a second, independent source for Axon's registered prefix. Data only. |
 | [Wireshark](https://github.com/wireshark/wireshark) | The Wireshark project | GPL-2.0 | Weekly copies of the IEEE and Bluetooth SIG registries, which is how every vendor claim here gets checked. Data only. |

@@ -183,6 +183,7 @@ void every_row_names_a_recorded_source_and_commit()
         add(provenanceProblem(std::string("SSID ") + s.prefix, s.provenance, ids, json));
     for (const BleNamePrefixSignature &s : kBleNamePrefixes)
         add(provenanceProblem(std::string("Name ") + s.prefix, s.provenance, ids, json));
+    add(provenanceProblem("Find My grading rule", kFindMyRuleProvenance, ids, json));
     report(problems);
 }
 

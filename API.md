@@ -59,8 +59,9 @@ static void mfgAt(uint8_t, std::string &out, const void *ctx) { out = static_cas
 static bool noUuid(uint8_t, uint16_t &, const void *) { return false; }
 
 int main() {
-    // Bluetooth: Apple's company ID (0x004C, little-endian) and Find My subtype 0x12.
-    Advert tag{std::string("\x4C\x00\x12\x19\x00", 5)};
+    // Bluetooth: Apple's company ID (0x004C, little-endian), Find My subtype 0x12,
+    // length 0x19 (away from its owner), and status 0x10 (device type 1, an AirTag).
+    Advert tag{std::string("\x4C\x00\x12\x19\x10", 5)};
     const uint8_t addr[6] = {0xC4, 0x11, 0x22, 0x33, 0x44, 0x55};
     lts::BleAdvertSource a;
     a.printedAddress = "c4:11:22:33:44:55"; a.addressBytes = addr; a.rssi = -61;
@@ -87,7 +88,7 @@ g++ -std=c++17 -Isrc quickstart.cpp src/lts/*.cpp -o quickstart && ./quickstart
 Output:
 
 ```
-detector 10  High    c4:11:22:33:44:55  Find My tracker beacon  rssi -61  ch 0
+detector 10  High    c4:11:22:33:44:55  AirTag away from its owner  rssi -61  ch 0
 detector 13  High    00:25:DF:01:02:03  Axon (Taser)  rssi -70  ch 6
 detector 13  High    00:25:DF:01:02:03  SSID AB3-1234  rssi -70  ch 6
 ```
@@ -123,13 +124,14 @@ Everything is in `namespace lts`.
 | 7 | `MultiSSID` | Wi-Fi | Two or more confirmed network names from one access point |
 | 8 | `Flock` | BLE and Wi-Fi | Flock Safety's registered prefix, module prefixes seen on Flock units, and Flock's battery-pack radio |
 | 9 | `Pineapple` | Wi-Fi | Hak5 Pineapple prefixes |
-| 10 | `AirTag` | BLE | Apple Find My offline-finding beacons |
+| 10 | `AirTag` | BLE | Apple Find My beacons, graded by device type: High only for an AirTag away from its owner, Medium for another Find My tag away from its owner, Low for everything else (iPhones, Macs, AirPods, tags near their owner) |
 | 11 | `Flipper` | BLE | Flipper Zero service UUIDs |
 | 12 | `Meta` | BLE | Meta Ray-Ban and Meta service UUIDs |
 | 13 | `Axon` | BLE and Wi-Fi | Axon prefixes, body-camera pairing SSIDs, and body-camera Bluetooth names |
 | 14 | `Tile` | BLE | Tile service UUIDs |
 | 15 | `SamsungTag` | BLE | Samsung SmartTag service UUID |
 | 16 | `GoogleTag` | BLE | Google Find My Device (Eddystone) UUID |
+| 17 | `Eapol` | Wi-Fi | WPA/RSN 4-way handshake (EAPOL-Key) frames, M1 to M4; Medium, provisional |
 
 The numbers are permanent. Store them, send them over a radio link, put them
 in a database. A number is never reused or changed, and a retired detector

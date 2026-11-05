@@ -55,11 +55,15 @@ void classifyBleAdvert(const BleAdvertSource &advert, const DetectorSet &enabled
         const uint16_t company = static_cast<uint16_t>(bytes[0]) |
                                  static_cast<uint16_t>(static_cast<uint16_t>(bytes[1]) << 8);
 
-        if (company == kAppleCompanyId && enabled.contains(DetectorId::AirTag) &&
-            isFindMyBeacon(bytes, mfg.size())) {
-            // High: Apple company ID plus a Find My offline-finding subtype.
-            emit(sink, sinkContext, DetectorId::AirTag, "Find My tracker beacon", address, rssi,
-                 Confidence::High);
+        if (company == kAppleCompanyId && enabled.contains(DetectorId::AirTag)) {
+            // Graded by the device type and owner state in the status byte,
+            // as AirGuard reads them (see FindMyKind in Signatures.h). Only
+            // an AirTag away from its owner is High.
+            const FindMyBeacon beacon = parseFindMy(bytes, mfg.size());
+            if (beacon.kind != FindMyKind::NotFindMy) {
+                const FindMyGrade g = gradeFindMy(beacon);
+                emit(sink, sinkContext, DetectorId::AirTag, g.detail, address, rssi, g.confidence);
+            }
         }
         if (company == kXuntongCompanyId && enabled.contains(DetectorId::Flock) &&
             isFlockName(name)) {

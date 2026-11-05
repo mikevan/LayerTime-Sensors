@@ -166,6 +166,81 @@ void mac_text_at_the_minimum_buffer()
     CHECK_STR("keep", keep);
 }
 
+// 1.1.2: the device type is status bits 4-5 and the owner state is the
+// payload length, as AirGuard (seemoo-lab d515c534, DeviceManager.kt) reads
+// them. Byte layout: company 4C 00, subtype 12, length, status.
+FindMyBeacon fm(uint8_t length, uint8_t status)
+{
+    const uint8_t r[] = {0x4C, 0x00, 0x12, length, status};
+    return parseFindMy(r, sizeof(r));
+}
+
+void find_my_device_type_comes_from_status_bits_4_and_5()
+{
+    CHECK_INT((int)FindMyKind::AppleDevice, (int)fm(0x19, 0x00).kind);
+    CHECK_INT((int)FindMyKind::AirTag, (int)fm(0x19, 0x10).kind);
+    CHECK_INT((int)FindMyKind::Accessory, (int)fm(0x19, 0x20).kind);
+    CHECK_INT((int)FindMyKind::AirPods, (int)fm(0x19, 0x30).kind);
+    // The other status bits (battery level in 6-7, flags in 0-3) do not
+    // change the type.
+    CHECK_INT((int)FindMyKind::AirTag, (int)fm(0x19, 0xD0).kind);
+    CHECK_INT((int)FindMyKind::AirTag, (int)fm(0x19, 0x1F).kind);
+    CHECK_INT((int)FindMyKind::AppleDevice, (int)fm(0x19, 0xCF).kind);
+}
+
+void find_my_length_0x19_means_away_from_the_owner()
+{
+    CHECK_TRUE(fm(0x19, 0x10).separated);
+    CHECK_FALSE(fm(0x02, 0x10).separated);
+    CHECK_FALSE(fm(0x18, 0x10).separated);
+    CHECK_FALSE(fm(0x1A, 0x10).separated);
+}
+
+void find_my_without_a_status_byte_is_unknown()
+{
+    const uint8_t three[] = {0x4C, 0x00, 0x12};
+    const uint8_t four[] = {0x4C, 0x00, 0x12, 0x19};
+    CHECK_INT((int)FindMyKind::Unknown, (int)parseFindMy(three, 3).kind);
+    CHECK_INT((int)FindMyKind::Unknown, (int)parseFindMy(four, 4).kind);
+    CHECK_FALSE(parseFindMy(four, 4).separated);
+    CHECK_INT((int)FindMyKind::NotFindMy, (int)parseFindMy(nullptr, 5).kind);
+}
+
+void subtype_0x1e_and_others_are_not_find_my()
+{
+    // 0x1E was a misread length byte, never an Apple subtype (review R13).
+    const uint8_t x1e[] = {0x4C, 0x00, 0x1E, 0x19, 0x10};
+    const uint8_t x07[] = {0x4C, 0x00, 0x07, 0x19, 0x10};
+    const uint8_t x10[] = {0x4C, 0x00, 0x10, 0x05, 0x10};
+    CHECK_FALSE(isFindMyBeacon(x1e, 5));
+    CHECK_FALSE(isFindMyBeacon(x07, 5));  // proximity pairing stays off
+    CHECK_FALSE(isFindMyBeacon(x10, 5));
+}
+
+void only_an_airtag_away_from_its_owner_is_high()
+{
+    struct Row { uint8_t length, status; Confidence c; const char *detail; };
+    const Row rows[] = {
+        {0x19, 0x10, Confidence::High, "AirTag away from its owner"},
+        {0x02, 0x10, Confidence::Low, "AirTag near its owner"},
+        {0x19, 0x20, Confidence::Medium, "Find My tag away from owner"},
+        {0x02, 0x20, Confidence::Low, "Find My tag near its owner"},
+        {0x19, 0x30, Confidence::Low, "AirPods (Find My)"},
+        {0x02, 0x30, Confidence::Low, "AirPods (Find My)"},
+        {0x19, 0x00, Confidence::Low, "Apple device (Find My)"},
+        {0x02, 0x00, Confidence::Low, "Apple device (Find My)"},
+    };
+    for (const Row &r : rows) {
+        const FindMyGrade g = gradeFindMy(fm(r.length, r.status));
+        CHECK_INT((int)r.c, (int)g.confidence);
+        CHECK_STR(r.detail, g.detail);
+    }
+    FindMyBeacon unknown;
+    unknown.kind = FindMyKind::Unknown;
+    CHECK_INT((int)Confidence::Low, (int)gradeFindMy(unknown).confidence);
+    CHECK_STR("Find My beacon, type unknown", gradeFindMy(unknown).detail);
+}
+
 int main(int argc, char **argv)
 {
     CHECK_MAIN(argc, argv);
@@ -181,6 +256,11 @@ int main(int argc, char **argv)
     CASE(ssid_prefixes_are_the_four_axon_prefixes);
     CASE(ssid_prefix_handles_non_letters_and_empty);
     CASE(find_my_needs_exactly_three_bytes_minimum);
+    CASE(find_my_device_type_comes_from_status_bits_4_and_5);
+    CASE(find_my_length_0x19_means_away_from_the_owner);
+    CASE(find_my_without_a_status_byte_is_unknown);
+    CASE(subtype_0x1e_and_others_are_not_find_my);
+    CASE(only_an_airtag_away_from_its_owner_is_high);
     CASE(mac_text_at_the_minimum_buffer);
     CHECK_SUMMARY();
 }

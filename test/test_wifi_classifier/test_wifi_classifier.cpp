@@ -346,6 +346,79 @@ void reset_forgets_trackers()
     CHECK_INT(0, h.seen.size());
 }
 
+// Builds an 802.11 data frame carrying one EAPOL-Key frame with the given Key
+// Information word. qos adds a QoS Control field (hl += 2); prot sets the
+// Protected bit (fc & 0x4000), which should make the EAPOL unreadable.
+static std::vector<uint8_t> eapolFrame(const uint8_t tx[6], uint16_t keyInfo,
+                                      bool qos = false, bool prot = false,
+                                      uint8_t ethHi = 0x88, uint8_t ethLo = 0x8E)
+{
+    std::vector<uint8_t> f(24, 0);
+    f[0] = qos ? 0x88 : 0x08;                  // type 2 (data); subtype 8 = QoS data
+    f[1] = prot ? 0x40 : 0x00;                 // Protected bit in the second FC byte
+    memcpy(&f[10], tx, 6);
+    if (qos) { f.push_back(0); f.push_back(0); }   // QoS Control
+    const uint8_t llc[8] = {0xAA, 0xAA, 0x03, 0x00, 0x00, 0x00, ethHi, ethLo};
+    f.insert(f.end(), llc, llc + 8);
+    f.push_back(0x01);                         // EAPOL version
+    f.push_back(0x03);                         // EAPOL type 3 = EAPOL-Key
+    f.push_back(0x00); f.push_back(0x5F);      // EAPOL body length (unused here)
+    f.push_back(0x02);                         // Key Descriptor Type
+    f.push_back((uint8_t)(keyInfo >> 8));
+    f.push_back((uint8_t)(keyInfo & 0xFF));
+    return f;
+}
+
+void eapol_handshake_messages_are_read_from_the_key_info_bits()
+{
+    struct Row { uint16_t ki; const char *detail; };
+    const Row rows[] = {
+        {0x0088, "EAPOL handshake M1"},   // pairwise + ACK
+        {0x0108, "EAPOL handshake M2"},   // pairwise + MIC, not secure
+        {0x0388, "EAPOL handshake M3"},   // pairwise + ACK + MIC + Secure
+        {0x0308, "EAPOL handshake M4"},   // pairwise + MIC + Secure, no ACK
+    };
+    for (const Row &r : rows) {
+        Harness h; h.wanted = {DetectorId::Eapol};
+        h.feed(eapolFrame(kMac, r.ki), -40, 6);
+        CHECK_INT(1, h.seen.size());
+        if (h.seen.size() == 1) {
+            CHECK_TRUE(h.seen[0].d == DetectorId::Eapol);
+            CHECK_INT(static_cast<int>(Confidence::Medium), static_cast<int>(h.seen[0].c));
+            CHECK_STR(r.detail, h.seen[0].detail.c_str());
+            CHECK_INT(6, h.seen[0].channel);
+        }
+    }
+    // The QoS header offset is handled: same detection with a QoS data frame.
+    Harness q; q.wanted = {DetectorId::Eapol};
+    q.feed(eapolFrame(kMac, 0x0388, /*qos=*/true), -40, 6);
+    CHECK_INT(1, q.seen.size());
+    if (q.seen.size() == 1) CHECK_STR("EAPOL handshake M3", q.seen[0].detail.c_str());
+}
+
+void eapol_is_silent_when_not_wanted_or_not_a_handshake()
+{
+    Harness off; off.wanted = {DetectorId::Deauth};   // Eapol not selected
+    off.feed(eapolFrame(kMac, 0x0388), -40, 6);
+    CHECK_INT(0, off.seen.size());
+
+    Harness grp; grp.wanted = {DetectorId::Eapol};
+    grp.feed(eapolFrame(kMac, 0x0080), -40, 6);       // ACK but not pairwise (group key)
+    CHECK_INT(0, grp.seen.size());
+
+    Harness prot; prot.wanted = {DetectorId::Eapol};
+    prot.feed(eapolFrame(kMac, 0x0388, false, /*prot=*/true), -40, 6);   // encrypted
+    CHECK_INT(0, prot.seen.size());
+
+    Harness ip; ip.wanted = {DetectorId::Eapol};
+    ip.feed(eapolFrame(kMac, 0x0388, false, false, 0x08, 0x00), -40, 6); // ethertype IPv4
+    CHECK_INT(0, ip.seen.size());
+
+    Harness mgmtf; mgmtf.wanted = {DetectorId::Eapol};
+    mgmtf.feed(beacon(kMac, "home"), -40, 6);         // a mgmt frame is never EAPOL
+    CHECK_INT(0, mgmtf.seen.size());
+}
+
 int main(int argc, char **argv)
 {
     CHECK_MAIN(argc, argv);
@@ -369,5 +442,7 @@ int main(int argc, char **argv)
     CASE(multissid_keeps_confirmed_names_when_slots_run_out);
     CASE(multissid_unconfirmed_names_make_room);
     CASE(reset_forgets_trackers);
+    CASE(eapol_handshake_messages_are_read_from_the_key_info_bits);
+    CASE(eapol_is_silent_when_not_wanted_or_not_a_handshake);
     CHECK_SUMMARY();
 }

@@ -43,7 +43,7 @@ void confidence_source_and_band_numbers_are_stable()
 
 void the_detector_list_is_sparse_unique_and_complete()
 {
-    CHECK_INT(12, kDetectorCount);
+    CHECK_INT(13, kDetectorCount);
     int known = 0;
     for (int v = 0; v <= 255; ++v) {
         const bool listed = [&] {
@@ -54,8 +54,10 @@ void the_detector_list_is_sparse_unique_and_complete()
         CHECK_INT(listed, isKnownDetector(static_cast<uint8_t>(v)));
         if (listed) ++known;
     }
-    CHECK_INT(12, known);
-    for (int v : {0, 1, 2, 3, 4, 17, 31, 32, 255}) CHECK_FALSE(isKnownDetector(static_cast<uint8_t>(v)));
+    CHECK_INT(13, known);
+    // 17 is now Eapol, a known detector; 18+ remain unknown here (18 is the
+    // watch-side ReconTarget value, not a sensor DetectorId).
+    for (int v : {0, 1, 2, 3, 4, 18, 31, 32, 255}) CHECK_FALSE(isKnownDetector(static_cast<uint8_t>(v)));
 }
 
 void empty_and_full_sets()

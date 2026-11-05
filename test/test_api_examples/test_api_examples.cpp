@@ -48,7 +48,8 @@ bool noUuid(uint8_t, uint16_t &, const void *) { return false; }
 void the_bluetooth_quick_start_reports_one_find_my_tracker()
 {
     std::vector<Seen> seen;
-    Advert tag{std::string("\x4C\x00\x12\x19\x00", 5)};
+    // Status 0x10: device type 1 (AirTag); length 0x19: away from its owner.
+    Advert tag{std::string("\x4C\x00\x12\x19\x10", 5)};
     const uint8_t address[6] = {0xC4, 0x11, 0x22, 0x33, 0x44, 0x55};
     BleAdvertSource advert;
     advert.printedAddress = "c4:11:22:33:44:55";
@@ -66,7 +67,7 @@ void the_bluetooth_quick_start_reports_one_find_my_tracker()
     CHECK_INT(10, static_cast<int>(seen[0].detector));
     CHECK_INT(static_cast<int>(Confidence::High), static_cast<int>(seen[0].confidence));
     CHECK_STR("c4:11:22:33:44:55", seen[0].address.c_str());
-    CHECK_STR("Find My tracker beacon", seen[0].detail.c_str());
+    CHECK_STR("AirTag away from its owner", seen[0].detail.c_str());
     CHECK_INT(-61, seen[0].rssi);
     CHECK_INT(0, seen[0].channel);
 }

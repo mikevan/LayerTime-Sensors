@@ -22,12 +22,52 @@
 
 namespace lts {
 
+FindMyBeacon parseFindMy(const uint8_t *mfg, size_t length)
+{
+    FindMyBeacon b;
+    if (mfg == nullptr || length < 3) return b;
+    const uint8_t subtype = mfg[2];
+    if (subtype == kFindMySubtype) {
+        if (length < 5) {
+            b.kind = FindMyKind::Unknown;
+            return b;
+        }
+        b.separated = mfg[3] == kFindMySeparatedLength;
+        switch ((mfg[4] & kFindMyTypeMask) >> kFindMyTypeShift) {
+        case 0: b.kind = FindMyKind::AppleDevice; break;
+        case 1: b.kind = FindMyKind::AirTag; break;
+        case 2: b.kind = FindMyKind::Accessory; break;
+        default: b.kind = FindMyKind::AirPods; break;
+        }
+        return b;
+    }
+    if (kMatchProximityPairing && subtype == 0x07) b.kind = FindMyKind::Unknown;
+    return b;
+}
+
 bool isFindMyBeacon(const uint8_t *mfg, size_t length)
 {
-    if (mfg == nullptr || length < 3) return false;
-    const uint8_t subtype = mfg[2];
-    if (subtype == 0x12 || subtype == 0x1E) return true;
-    return kMatchProximityPairing && subtype == 0x07;
+    return parseFindMy(mfg, length).kind != FindMyKind::NotFindMy;
+}
+
+FindMyGrade gradeFindMy(const FindMyBeacon &b)
+{
+    // Only a tag away from its owner is a tracking concern; a tag whose
+    // owner is in range is someone's keys. Low is logged, never an alert.
+    switch (b.kind) {
+    case FindMyKind::AirTag:
+        return b.separated ? FindMyGrade{Confidence::High, "AirTag away from its owner"}
+                           : FindMyGrade{Confidence::Low, "AirTag near its owner"};
+    case FindMyKind::Accessory:
+        return b.separated ? FindMyGrade{Confidence::Medium, "Find My tag away from owner"}
+                           : FindMyGrade{Confidence::Low, "Find My tag near its owner"};
+    case FindMyKind::AirPods:
+        return {Confidence::Low, "AirPods (Find My)"};
+    case FindMyKind::AppleDevice:
+        return {Confidence::Low, "Apple device (Find My)"};
+    default:
+        return {Confidence::Low, "Find My beacon, type unknown"};
+    }
 }
 
 bool allDigits(const std::string &value)

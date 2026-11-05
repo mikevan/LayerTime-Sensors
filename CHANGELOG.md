@@ -3,6 +3,52 @@
 Every change names the upstream work behind it. See [SOURCES.md](SOURCES.md)
 for who those people are.
 
+## 1.1.2
+
+### Detection changes
+
+- **AirTag: only a real AirTag away from its owner is High.** Until now any
+  Apple Find My broadcast was a High "Find My tracker beacon". iPhones,
+  Macs, AirPods, and third-party tags all send that broadcast, so in field
+  use the detector flooded on every Apple product in range. The detector
+  now reads the device type from bits 4 and 5 of the status byte and the
+  owner state from the payload length, the way AirGuard does
+  ([`d515c53`](https://github.com/seemoo-lab/AirGuard/blob/d515c534be7aac370de33e7bae0136a7b995e0cf/app/src/main/java/de/seemoo/at_tracking_detection/database/models/device/DeviceManager.kt),
+  `calculateDeviceType` and `AppleFindMy.getConnectionState`):
+  - AirTag away from its owner: High, "AirTag away from its owner".
+  - Other Find My tag away from its owner: Medium, "Find My tag away from
+    owner". AirGuard notes that 2nd-generation AirTags can report here.
+  - AirTag or tag near its owner, AirPods, and Apple devices: Low. Logged,
+    never an alert.
+  - A Find My record too short to carry a status byte: Low.
+- **The `0x1E` subtype is gone.** It was never an Apple subtype, only a
+  length byte misread in an older pattern. Upstream review R13.
+- Proximity pairing (`0x07`) stays off. If it is turned on, its matches are
+  Low, because they carry no status byte.
+
+### Detection additions
+
+- **New detector `Eapol` (id 17): the WPA/RSN 4-way handshake.** The Wi-Fi
+  classifier now reads unencrypted EAPOL-Key data frames and reports which
+  handshake message it saw (M1 to M4) from the Key Information bits
+  (pairwise, ACK, MIC, Secure), as the 802.11 standard defines them. A
+  handshake capture in progress, or a forced reassociation, is a real
+  attack indicator. Graded Medium, and provisional: the bit parse is not
+  trusted until it is checked against real captures. Wi-Fi only. Idea
+  reference: 7h30th3r0n3 Evil-M5Project `wifi_radar.h`
+  ([`2653508`](https://github.com/7h30th3r0n3/Evil-M5Project/commit/2653508)),
+  reimplemented, no code copied. Encrypted data frames and non-pairwise
+  (group-key) EAPOL are ignored.
+
+### Provenance
+
+- AirGuard added to `sources/registry.json` and `SOURCES.md` (Apache-2.0).
+  The rule is reimplemented, no code copied. `kFindMyRuleProvenance`
+  records it, and `test_sources` checks it like a table row.
+- AirGuard's scan filters mask the status byte with `0x18`, while its
+  type decision masks with `0x30`. They agree for AirTags and disagree for
+  AirPods. This library follows the type decision.
+
 ## 1.1.1
 
 ### Detection changes

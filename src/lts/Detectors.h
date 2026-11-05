@@ -47,6 +47,11 @@ enum class DetectorId : uint8_t {
     Tile = 14,
     SamsungTag = 15,
     GoogleTag = 16,
+    // 1.1.2: unencrypted WPA/RSN 4-way handshake (EAPOL-Key) frames. A real
+    // attack indicator (a handshake capture in progress, a forced reassoc),
+    // not a device vendor. Wi-Fi only. 17 is free here; the watch-side
+    // ReconTarget gives it 18, since 17 is EarlyWarning there.
+    Eapol = 17,
 };
 
 inline constexpr DetectorId kAllDetectors[] = {
@@ -54,6 +59,7 @@ inline constexpr DetectorId kAllDetectors[] = {
     DetectorId::Flock,   DetectorId::Pineapple,  DetectorId::AirTag,
     DetectorId::Flipper, DetectorId::Meta,       DetectorId::Axon,
     DetectorId::Tile,    DetectorId::SamsungTag, DetectorId::GoogleTag,
+    DetectorId::Eapol,
 };
 
 inline constexpr size_t kDetectorCount = sizeof(kAllDetectors) / sizeof(kAllDetectors[0]);

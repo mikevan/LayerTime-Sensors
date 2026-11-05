@@ -113,6 +113,21 @@
       "notes": "SquachWatch-CYD ported its AirTag payload check from nyanBOX; the Find My subtype rule reached this library through that port."
     },
     {
+      "id": "airguard",
+      "name": "AirGuard",
+      "url": "https://github.com/seemoo-lab/AirGuard",
+      "author": "Secure Mobile Networking Lab (SEEMOO), TU Darmstadt",
+      "license": "Apache-2.0",
+      "use": "code-and-data",
+      "role": "integrated",
+      "feeds": ["AirTag"],
+      "upstream_seen_sha": "d515c534be7aac370de33e7bae0136a7b995e0cf",
+      "last_reviewed_sha": "d515c534be7aac370de33e7bae0136a7b995e0cf",
+      "last_reviewed": "2026-11-02",
+      "integrated_sha": "d515c534be7aac370de33e7bae0136a7b995e0cf",
+      "notes": "The Find My grading in 1.1.2: device type from status-byte bits 4-5 (DeviceManager.kt calculateDeviceType: 0 Apple device, 1 AirTag, 2 Find My accessory, 3 AirPods) and away-from-owner from payload length 0x19 (AppleFindMy.getConnectionState). Rule reimplemented in C++; no code copied. AirGuard's scan filters (AirTag.kt, AirPods.kt) mask the status byte with 0x18 instead of 0x30; the two agree for AirTags and disagree for AirPods, so this library follows calculateDeviceType, the code AirGuard uses to decide the type."
+    },
+    {
       "id": "kismet",
       "name": "Kismet",
       "url": "https://github.com/kismetwireless/kismet",

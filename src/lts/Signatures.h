@@ -65,14 +65,70 @@ inline constexpr CompanyIdSignature kCompanyIdSignatures[] = {
      {"flock-you", "6704f01", "1.0.0", Evidence::FieldCaptured}},
 };
 
-// Apple Find My offline-finding subtypes: 0x12 near owner, 0x1E separated.
-// The subtype check follows SquachWatch-CYD, which ported it from nyanBOX.
+// Apple Find My offline-finding advertisement (subtype 0x12). Every Find My
+// device sends it: iPhones, Macs, AirPods, and third-party tags as well as
+// AirTags. Matching the subtype alone therefore says "an Apple Find My
+// device", never "an AirTag"; until 1.1.2 that match was graded High, and
+// field use showed it flooding on every Apple product in range.
+//
+// The record, counting from the company ID (Android strips the company ID,
+// so AirGuard's indexes are these minus 2):
+//   [0..1] company ID 0x004C   [2] subtype 0x12   [3] payload length
+//   [4] status byte
+// AirGuard (seemoo-lab, Apache-2.0, d515c534, DeviceManager.kt
+// calculateDeviceType) reads the device type from status bits 4-5,
+// (status & 0x30) >> 4: 0 Apple device, 1 AirTag, 2 Find My accessory,
+// 3 AirPods. AirGuard's AirTag.kt notes that a 2nd-generation AirTag can
+// report as a Find My accessory. A payload length of 0x19 (the full
+// rotating key) means the device has been away from its owner for a while;
+// AirGuard (AppleFindMy.getConnectionState) calls that OVERMATURE_OFFLINE,
+// and it is the state a planted tag is in. Any other length means the
+// owner's phone is near it.
+//
+// The old 0x1E "separated" subtype is gone: it was never an Apple subtype,
+// but a length byte misread in an older pattern (upstream review R13).
+//
 // SquachWatch-CYD additionally matches 0x07 ("proximity pairing"), which
-// catches a tag earlier but also fires on AirPods and other Apple
+// catches a fresh tag earlier but also fires on AirPods and other Apple
 // accessories. Off here on purpose: this drives a buzz on the wrist, and a
 // detector that trips on the owner's own earbuds gets ignored. Flip to
-// true to trade precision for earlier warning.
+// true to trade precision for earlier warning; a 0x07 match carries no
+// status byte, so it is reported as FindMyKind::Unknown, at Low.
 inline constexpr bool kMatchProximityPairing = false;
+
+inline constexpr uint8_t kFindMySubtype = 0x12;
+inline constexpr uint8_t kFindMySeparatedLength = 0x19;
+inline constexpr uint8_t kFindMyTypeMask = 0x30;
+inline constexpr uint8_t kFindMyTypeShift = 4;
+
+enum class FindMyKind : uint8_t {
+    NotFindMy = 0,    // not a Find My advertisement at all
+    Unknown = 1,      // Find My, but too short to carry a status byte
+    AppleDevice = 2,  // status type 0: iPhone, iPad, Mac, Watch
+    AirTag = 3,       // status type 1
+    Accessory = 4,    // status type 2: third-party Find My tag, some AirTags
+    AirPods = 5,      // status type 3
+};
+
+struct FindMyBeacon {
+    FindMyKind kind = FindMyKind::NotFindMy;
+    bool separated = false;  // away from its owner (payload length 0x19)
+};
+
+// mfg is the whole manufacturer record, company ID included.
+FindMyBeacon parseFindMy(const uint8_t *mfg, size_t length);
+
+// How a Find My beacon is reported: the grade, and the detail text.
+struct FindMyGrade {
+    Confidence confidence;
+    const char *detail;
+};
+FindMyGrade gradeFindMy(const FindMyBeacon &beacon);
+
+// Where the Find My grading came from; test_sources checks it like a row.
+// FieldCaptured: AirGuard is a university study of real Find My devices.
+inline constexpr Provenance kFindMyRuleProvenance = {"airguard", "d515c53", "1.1.2",
+                                                     Evidence::FieldCaptured};
 
 struct BleUuidSignature {
     uint16_t uuid;
@@ -123,7 +179,7 @@ inline constexpr BleUuidSignature kBleUuidSignatures[] = {
      {"legacy-firmware", "", "1.0.0", Evidence::RegistryVerified}},
 };
 
-bool isFindMyBeacon(const uint8_t *mfg, size_t length);
+bool isFindMyBeacon(const uint8_t *mfg, size_t length);  // parseFindMy(...).kind != NotFindMy
 
 bool allDigits(const std::string &value);
 

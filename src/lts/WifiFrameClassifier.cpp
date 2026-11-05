@@ -38,6 +38,35 @@ void emit(CandidateSink sink, void *context, DetectorId detector, const char *de
     sink(c, context);
 }
 
+// An 802.11 data frame that carries an unencrypted EAPOL-Key frame: returns
+// the 4-way handshake message number 1..4, or 0 when it is not one. The 802.11
+// header length is variable, so it is built up from the frame-control bits
+// before the LLC/SNAP and EAPOL-Key fields are read. The message number comes
+// from the Key Information bits (pairwise, ACK, MIC, Secure), as the 802.11
+// standard defines them. Idea reference: 7h30th3r0n3 Evil-M5Project
+// wifi_radar.h @ 2653508 (GPL-3.0, reimplemented, no code copied).
+uint8_t eapolHandshakeMessage(const uint8_t *frame, uint16_t length, uint8_t subtype,
+                              uint16_t fc)
+{
+    if (fc & 0x4000) return 0;                 // Protected: EAPOL would be ciphertext
+    int hl = 24;
+    if ((fc & 0x0300) == 0x0300) hl += 6;      // ToDS+FromDS: a 4-address header
+    if (subtype & 0x08)          hl += 2;      // QoS Control
+    if (fc & 0x8000)             hl += 4;      // HT Control (Order bit)
+    if (length < hl + 15) return 0;
+    const uint8_t *s = frame + hl;             // LLC/SNAP
+    if (!(s[0] == 0xAA && s[1] == 0xAA && s[2] == 0x03 && s[6] == 0x88 && s[7] == 0x8E))
+        return 0;
+    if (s[9] != 0x03) return 0;                // EAPOL packet type 3 = EAPOL-Key
+    const uint16_t ki = (uint16_t)(s[13] << 8) | s[14];   // Key Information
+    if (!(ki & 0x0008)) return 0;              // pairwise key only (the 4-way handshake)
+    const bool ack = ki & 0x0080, mic = ki & 0x0100, sec = ki & 0x0200;
+    if (ack && !mic) return 1;
+    if (ack && mic)  return 3;
+    if (!sec)        return 2;
+    return 4;
+}
+
 // Empty, or every byte zero: how access points hide their network name.
 bool ssidIsHidden(const uint8_t *ssid, uint8_t length)
 {
@@ -77,6 +106,7 @@ void WifiFrameClassifier::classify(const uint8_t *frame, uint16_t length, int8_t
                                    void *sinkContext)
 {
     if (length < 24) return;
+    const uint16_t fc = (uint16_t)frame[0] | ((uint16_t)frame[1] << 8);
     const uint8_t frameType = (frame[0] >> 2) & 0x03;
     const uint8_t subtype = (frame[0] >> 4) & 0x0F;
     char mac[18];
@@ -94,6 +124,20 @@ void WifiFrameClassifier::classify(const uint8_t *frame, uint16_t length, int8_t
              Confidence::Medium, channel);
     if (frameType == 0 && subtype == 0x08)
         inspectBeacon(frame, length, rssi, channel, nowMs, enabled, sink, sinkContext);
+
+    // Data frames: an unencrypted EAPOL-Key frame is a 4-way handshake step.
+    // Medium, not High: it is a real decode, but it reports that a handshake
+    // was seen, which is not by itself proof of an attack, and the bit parse
+    // is provisional until checked against real captures.
+    if (frameType == 2 && enabled.contains(DetectorId::Eapol)) {
+        const uint8_t m = eapolHandshakeMessage(frame, length, subtype, fc);
+        if (m) {
+            char detail[24];
+            snprintf(detail, sizeof(detail), "EAPOL handshake M%u", (unsigned)m);
+            emit(sink, sinkContext, DetectorId::Eapol, detail, mac, rssi,
+                 Confidence::Medium, channel);
+        }
+    }
 }
 
 void WifiFrameClassifier::inspectBeacon(const uint8_t *payload, uint16_t length, int8_t rssi,

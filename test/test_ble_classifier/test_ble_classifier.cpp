@@ -228,6 +228,39 @@ void nothing_is_reported_for_an_empty_scan()
     CHECK_INT(0, classify(a, DetectorSet::none()).size());
 }
 
+// 1.1.2: the field-test flood. Every Apple Find My device in range used to
+// be a High "Find My tracker beacon". Now only an AirTag away from its owner
+// is High, so an iPhone, a Mac, or AirPods never buzz.
+void apple_find_my_is_graded_by_device_type_end_to_end()
+{
+    struct Row { uint8_t length, status; Confidence c; const char *detail; };
+    const Row rows[] = {
+        {0x19, 0x10, Confidence::High, "AirTag away from its owner"},
+        {0x02, 0x10, Confidence::Low, "AirTag near its owner"},
+        {0x19, 0x20, Confidence::Medium, "Find My tag away from owner"},
+        {0x19, 0x30, Confidence::Low, "AirPods (Find My)"},
+        {0x19, 0x00, Confidence::Low, "Apple device (Find My)"},
+    };
+    for (const Row &r : rows) {
+        Advert a;
+        a.name = "Mike's iPhone";  // a name never changes the Find My detail
+        a.mfg = {bytes({0x4C, 0x00, 0x12, r.length, r.status})};
+        const auto s = classify(a, only(DetectorId::AirTag));
+        CHECK_INT(1, s.size());
+        if (s.size() != 1) continue;
+        CHECK_INT((int)DetectorId::AirTag, (int)s[0].d);
+        CHECK_INT((int)r.c, (int)s[0].c);
+        CHECK_STR(r.detail, s[0].detail.c_str());
+    }
+}
+
+void apple_records_that_are_not_find_my_report_nothing()
+{
+    Advert a;
+    a.mfg = {bytes({0x4C, 0x00, 0x1E, 0x19, 0x10}), bytes({0x4C, 0x00, 0x10, 0x05, 0x10})};
+    CHECK_INT(0, classify(a, DetectorSet::all()).size());
+}
+
 int main(int argc, char **argv)
 {
     CHECK_MAIN(argc, argv);
@@ -244,5 +277,7 @@ int main(int argc, char **argv)
     CASE(axon_name_is_silent_when_axon_is_off);
     CASE(axon_address_then_axon_name);
     CASE(nothing_is_reported_for_an_empty_scan);
+    CASE(apple_find_my_is_graded_by_device_type_end_to_end);
+    CASE(apple_records_that_are_not_find_my_report_nothing);
     CHECK_SUMMARY();
 }

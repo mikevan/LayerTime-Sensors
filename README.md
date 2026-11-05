@@ -18,13 +18,14 @@ any embedded build that accepts a library.
 | 7 | MultiSSID | Wi-Fi | Two or more confirmed network names from one BSSID |
 | 8 | Flock | BLE and Wi-Fi | Flock Safety's registered prefix (High), module-maker prefixes seen on Flock units (Low), and the XUNTONG BLE module gated on a Flock-shaped name |
 | 9 | Pineapple | Wi-Fi | Hak5 Pineapple vendor prefixes |
-| 10 | AirTag | BLE | Apple Find My offline-finding beacons |
+| 10 | AirTag | BLE | Apple Find My beacons, graded by device type: High only for an AirTag away from its owner, Medium for another Find My tag away from its owner, Low for everything else |
 | 11 | Flipper | BLE | Flipper Zero service UUIDs |
 | 12 | Meta | BLE | Meta Ray-Ban and Meta service UUIDs |
 | 13 | Axon | BLE and Wi-Fi | Axon vendor prefixes and body-camera SSID prefixes |
 | 14 | Tile | BLE | Tile service UUIDs |
 | 15 | SamsungTag | BLE | Samsung SmartTag service UUID |
 | 16 | GoogleTag | BLE | Google Find My Device (Eddystone) UUID |
+| 17 | Eapol | Wi-Fi | WPA/RSN 4-way handshake (EAPOL-Key), M1 to M4 (Medium, provisional) |
 
 The numbers are stable. Consumers store and transmit them, so a number is
 never reused or changed. They are sparse and start at 5; iterate

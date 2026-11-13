@@ -1,0 +1,22 @@
+name: Shared library consumers
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  layertime:
+    name: LayerTime candidate
+    uses: mikevan/LayerTime/.github/workflows/ci.yml@main
+    with:
+      product_ref: main
+      candidate_repository: LayerTime-Sensors
+      candidate_revision: ${{ github.sha }}
+  hunter:
+    name: Hunter candidate
+    uses: mikevan/Hunter/.github/workflows/ci.yml@main
+    with:
+      product_ref: main
+      candidate_repository: LayerTime-Sensors
+      candidate_revision: ${{ github.sha }}

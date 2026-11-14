@@ -1,5 +1,9 @@
 # LayerTime-Sensors
 
+Wireless activity can reveal risks that would otherwise remain unseen. LayerTime-Sensors provides inspectable, reusable signature matching so field tools can make supported observations available to the people using them.
+
+The library applies explicit rules to observations the caller supplies. A match reports a supported radio signature; it does not establish an operator's identity, malicious intent, or a confirmed attack.
+
 Passive wireless threat detectors for small radios. You hand it a BLE
 advertisement or an 802.11 frame your radio already captured, plus the set of
 detectors you want, and it reports which detectors matched. It does not scan,

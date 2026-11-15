@@ -261,9 +261,29 @@ void apple_records_that_are_not_find_my_report_nothing()
     CHECK_INT(0, classify(a, DetectorSet::all()).size());
 }
 
+void remote_id_requires_valid_payload_and_preserves_bytes() {
+    Advert a; a.name="Drone"; a.uuids={0xfffa};
+    CHECK_INT(0,classify(a,only(DetectorId::RemoteId)).size());
+    auto source=a.source();
+    source.remoteIdServiceData=[](std::string& out,const void*) {
+        out=std::string(27,'\0');out[0]=0x0d;out[1]=42;out[2]=2;out[3]=0x12;out[4]='T';return true;
+    };
+    std::vector<Seen> seen;
+    auto sink=[](const Candidate& c,void* context) {
+        static_cast<std::vector<Seen>*>(context)->push_back({c.detector,c.detail,c.address,c.rssi,c.confidence,c.channel});
+    };
+    classifyBleAdvert(source,only(DetectorId::RemoteId),sink,&seen);
+    CHECK_INT(1,seen.size());
+    if(seen.size()==1){CHECK_INT(59,seen[0].detail.size());CHECK_TRUE(seen[0].detail.find("RID1:0D2A021254")==0);CHECK_INT(1,int(seen[0].c));}
+    seen.clear();classifyBleAdvert(source,DetectorSet::none(),sink,&seen);CHECK_INT(0,seen.size());
+    source.remoteIdServiceData=[](std::string& out,const void*){out="bad";return true;};
+    classifyBleAdvert(source,only(DetectorId::RemoteId),sink,&seen);CHECK_INT(0,seen.size());
+}
+
 int main(int argc, char **argv)
 {
     CHECK_MAIN(argc, argv);
+    CASE(remote_id_requires_valid_payload_and_preserves_bytes);
     CASE(order_is_manufacturer_then_address_then_uuids);
     CASE(oui_reads_bytes_zero_to_two_of_what_it_is_given);
     CASE(short_manufacturer_records_are_skipped);

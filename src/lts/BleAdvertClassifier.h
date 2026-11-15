@@ -53,6 +53,8 @@ struct BleAdvertSource {
     // UUID, or matches none of kBleUuidSignatures (Signatures.h).
     bool (*uuid16)(uint8_t index, uint16_t &out, const void *context) = nullptr;
 
+    // UUID 0xFFFA service data, without UUID bytes. False when absent.
+    bool (*remoteIdServiceData)(std::string &out, const void *context) = nullptr;
     const void *context = nullptr;
 };
 

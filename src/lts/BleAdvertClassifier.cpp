@@ -18,6 +18,7 @@
 #include "BleAdvertClassifier.h"
 
 #include "Signatures.h"
+#include "RemoteId.h"
 
 namespace lts {
 
@@ -44,6 +45,17 @@ void classifyBleAdvert(const BleAdvertSource &advert, const DetectorSet &enabled
     const int8_t rssi = advert.rssi;
     const char *label = name.empty() ? nullptr : name.c_str();
 
+    // A service UUID or a device name alone cannot establish Remote ID.
+    if (enabled.contains(DetectorId::RemoteId) && advert.remoteIdServiceData) {
+        std::string raw; RemoteIdBasicClaim claim;
+        if (advert.remoteIdServiceData(raw, advert.context) &&
+            parseRemoteIdBasicServiceData(0xfffa,reinterpret_cast<const uint8_t*>(raw.data()),raw.size(),claim)) {
+            // Preserve every service-data byte in the ordinary detail field.
+            std::string detail="RID1:"; const char* hex="0123456789ABCDEF";
+            for (unsigned char byte:raw) {detail+=hex[byte>>4];detail+=hex[byte&15];}
+            emit(sink,sinkContext,DetectorId::RemoteId,detail.c_str(),address,rssi,Confidence::Medium);
+        }
+    }
     // ---- manufacturer data ----
     // An advertisement may carry more than one manufacturer record, so walk
     // them all rather than assuming index 0.

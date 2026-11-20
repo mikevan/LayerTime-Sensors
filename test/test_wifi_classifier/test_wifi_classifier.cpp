@@ -334,6 +334,40 @@ void multissid_unconfirmed_names_make_room()
     CHECK_INT(1, h.seen.size());
 }
 
+void dji_oui_reports_low_confidence_presence_on_beacons_and_probe_responses()
+{
+    Harness h;
+    h.wanted = {DetectorId::DjiWifiPresence};
+    const uint8_t dji[6] = {0x0C, 0x9A, 0xE6, 0x10, 0x20, 0x30};
+    h.feed(beacon(dji, "test"), -73, 44);
+    CHECK_INT(1, h.seen.size());
+    if (!h.seen.empty()) {
+        CHECK_INT(static_cast<int>(DetectorId::DjiWifiPresence), static_cast<int>(h.seen[0].d));
+        CHECK_INT(static_cast<int>(Confidence::Low), static_cast<int>(h.seen[0].c));
+        CHECK_STR("DJI Wi-Fi OUI observed; Remote ID not checked", h.seen[0].detail.c_str());
+        CHECK_STR("0C:9A:E6:10:20:30", h.seen[0].address.c_str());
+        CHECK_INT(44, h.seen[0].channel);
+    }
+    h.feed(mgmt(0x05, dji, 24), -69, 149);
+    CHECK_INT(2, h.seen.size());
+    if (h.seen.size() > 1) CHECK_INT(149, h.seen[1].channel);
+}
+
+void dji_oui_presence_requires_matching_prefix_and_enabled_detector()
+{
+    Harness h;
+    h.wanted = {DetectorId::DjiWifiPresence};
+    const uint8_t unrelated[6] = {0x0C, 0x9A, 0xE7, 1, 2, 3};
+    h.feed(beacon(unrelated, "test"));
+    h.feed(mgmt(0x05, unrelated, 24));
+    h.wanted.clear();
+    const uint8_t dji[6] = {0x0C, 0x9A, 0xE6, 1, 2, 3};
+    h.feed(beacon(dji, "test"));
+    h.wanted = {DetectorId::DjiWifiPresence};
+    h.feed(mgmt(0x05, dji, 23));
+    CHECK_INT(0, h.seen.size());
+}
+
 void reset_forgets_trackers()
 {
     Harness h;
@@ -441,6 +475,8 @@ int main(int argc, char **argv)
     CASE(multissid_tracks_sixteen_bssids_and_gives_up_the_quietest);
     CASE(multissid_keeps_confirmed_names_when_slots_run_out);
     CASE(multissid_unconfirmed_names_make_room);
+    CASE(dji_oui_reports_low_confidence_presence_on_beacons_and_probe_responses);
+    CASE(dji_oui_presence_requires_matching_prefix_and_enabled_detector);
     CASE(reset_forgets_trackers);
     CASE(eapol_handshake_messages_are_read_from_the_key_info_bits);
     CASE(eapol_is_silent_when_not_wanted_or_not_a_handshake);

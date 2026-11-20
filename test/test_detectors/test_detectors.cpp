@@ -24,6 +24,8 @@ void detector_numbers_are_stable()
     CHECK_INT(14, static_cast<int>(DetectorId::Tile));
     CHECK_INT(15, static_cast<int>(DetectorId::SamsungTag));
     CHECK_INT(16, static_cast<int>(DetectorId::GoogleTag));
+    CHECK_INT(17, static_cast<int>(DetectorId::Eapol));
+    CHECK_INT(18, static_cast<int>(DetectorId::DjiWifiPresence));
 }
 
 void confidence_source_and_band_numbers_are_stable()
@@ -43,7 +45,7 @@ void confidence_source_and_band_numbers_are_stable()
 
 void the_detector_list_is_sparse_unique_and_complete()
 {
-    CHECK_INT(13, kDetectorCount);
+    CHECK_INT(14, kDetectorCount);
     int known = 0;
     for (int v = 0; v <= 255; ++v) {
         const bool listed = [&] {
@@ -54,10 +56,10 @@ void the_detector_list_is_sparse_unique_and_complete()
         CHECK_INT(listed, isKnownDetector(static_cast<uint8_t>(v)));
         if (listed) ++known;
     }
-    CHECK_INT(13, known);
+    CHECK_INT(14, known);
     // 17 is now Eapol, a known detector; 18+ remain unknown here (18 is the
     // watch-side ReconTarget value, not a sensor DetectorId).
-    for (int v : {0, 1, 2, 3, 4, 18, 31, 32, 255}) CHECK_FALSE(isKnownDetector(static_cast<uint8_t>(v)));
+    for (int v : {0, 1, 2, 3, 4, 19, 31, 32, 255}) CHECK_FALSE(isKnownDetector(static_cast<uint8_t>(v)));
 }
 
 void empty_and_full_sets()

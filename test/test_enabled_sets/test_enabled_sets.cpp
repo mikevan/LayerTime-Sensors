@@ -149,6 +149,8 @@ std::vector<Frame> wifiCorpus()
     v.push_back({beacon(flock, "AB3-12", true), t += 10});
     const uint8_t pine[6] = {0x00, 0x13, 0x37, 1, 2, 3};
     v.push_back({beacon(pine, "free", false), t += 10});
+    const uint8_t dji[6] = {0x0C, 0x9A, 0xE6, 1, 2, 3};
+    v.push_back({beacon(dji, "drone", false), t += 10});
     const uint8_t multi[6] = {0x02, 9, 9, 9, 9, 9};
     for (int r = 0; r < 3; ++r) {
         v.push_back({beacon(multi, "One", true), t += 10});
@@ -187,8 +189,8 @@ void wifi_every_set_keeps_exactly_its_own_detectors()
     const std::vector<Frame> corpus = wifiCorpus();
     const std::vector<Seen> all = runWifi(corpus, DetectorSet::all());
     // Deauth, Pwnagotchi, Pineapple on the Pwnagotchi BSSID (DE:AD:BE is on
-    // the Pineapple list too), Flock (OUI), Axon (SSID), Pineapple, MultiSSID.
-    CHECK_INT(7, all.size());
+    // the Pineapple list too), Flock (OUI), Axon (SSID), Pineapple, DJI, MultiSSID.
+    CHECK_INT(8, all.size());
     int bad = 0;
     for (uint32_t m = 0; m < (1u << kDetectorCount); ++m) {
         const DetectorSet s = fromMask(m);

@@ -3,6 +3,18 @@
 Every change names the upstream work behind it. See [SOURCES.md](SOURCES.md)
 for who those people are.
 
+## 1.1.3
+
+### Detection changes
+
+- **New detector `DjiWifiPresence` (id 18): DJI Wi-Fi OUI observed.** A beacon or probe response with prefix `0C:9A:E6` emits a Low-confidence presence candidate. This is not an aircraft identification, location estimate, or Remote ID decode. Source: Isaac Bentley’s Orecchino ESP32 project, commit [`a3d0620`](https://github.com/isaacbentley/orecchino-esp32/commit/a3d06206010e66d5295ad36e167e100d2c0670c6). The library uses only the identifier as data; it copies no Orecchino code.
+- **Remote ID remains an evaluation candidate.** The catalog compares Mattbusel’s Rust `remoteid` and Just Call Me Koko’s Remote ID Radar with OpenDroneID core C before selecting an implementation. Remote ID Radar is an independent Python port of ESP32 Marauder with Wi-Fi Beacon, NAN, and BLE tests; it is a useful cross-check, not drop-in Hunter code. Its payload is GPL-3.0-only, uses the Hak5 Pager environment, and tunes Wi-Fi to channel 6. No payload code was copied.
+- Add approved sub-GHz protocol, optional driver, RF activity, and external radiation-instrument updates to the sensor upgrade catalogue. Those entries do not claim current product hardware support.
+
+### Validation
+
+- Host replay tests cover DJI beacon and probe-response matching, gating, confidence, and unrelated prefixes. No over-the-air or Hunter hardware validation is claimed in this release.
+
 ## 1.1.2
 
 ### Detection changes

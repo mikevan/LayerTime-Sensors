@@ -102,6 +102,8 @@ private:
     void inspectBeacon(const uint8_t *payload, uint16_t length, int8_t rssi, uint8_t channel,
                        uint32_t nowMs, const DetectorSet &enabled, CandidateSink sink,
                        void *sinkContext);
+    void inspectDjiWifi(const uint8_t *frame, uint16_t length, int8_t rssi, uint8_t channel,
+                        const DetectorSet &enabled, CandidateSink sink, void *sinkContext);
     // Records one named beacon from `bssid`. Returns true when that beacon
     // confirmed a name and the BSSID now has two or more confirmed names;
     // `detail` then holds "SSIDs: A | B".

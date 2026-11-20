@@ -52,6 +52,8 @@ enum class DetectorId : uint8_t {
     // not a device vendor. Wi-Fi only. 17 is free here; the watch-side
     // ReconTarget gives it 18, since 17 is EarlyWarning there.
     Eapol = 17,
+    // Low-confidence OUI observation, not aircraft identity or Remote ID.
+    DjiWifiPresence = 18,
 };
 
 inline constexpr DetectorId kAllDetectors[] = {
@@ -59,7 +61,7 @@ inline constexpr DetectorId kAllDetectors[] = {
     DetectorId::Flock,   DetectorId::Pineapple,  DetectorId::AirTag,
     DetectorId::Flipper, DetectorId::Meta,       DetectorId::Axon,
     DetectorId::Tile,    DetectorId::SamsungTag, DetectorId::GoogleTag,
-    DetectorId::Eapol,
+    DetectorId::Eapol, DetectorId::DjiWifiPresence,
 };
 
 inline constexpr size_t kDetectorCount = sizeof(kAllDetectors) / sizeof(kAllDetectors[0]);

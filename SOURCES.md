@@ -27,6 +27,8 @@ The machine-readable version of this page is
 | [GainSec](https://github.com/GainSec) | Jon "GainSec" Gaines | n/a | Credited by nite-oui-collection with the original Flock prefix list. |
 | [Kismet](https://github.com/kismetwireless/kismet) | Mike Kershaw (dragorn) and contributors | GPL-2.0 | The Axon body-camera name `Axon-X` and address `12:20:13`, and a second, independent source for Axon's registered prefix. Data only. |
 | [Wireshark](https://github.com/wireshark/wireshark) | The Wireshark project | GPL-2.0 | Weekly copies of the IEEE and Bluetooth SIG registries, which is how every vendor claim here gets checked. Data only. |
+| [Orecchino ESP32](https://github.com/isaacbentley/orecchino-esp32) | Isaac Bentley | GPL-3.0-or-later | The DJI Wi-Fi OUI presence lead, from commit [`a3d0620`](https://github.com/isaacbentley/orecchino-esp32/commit/a3d06206010e66d5295ad36e167e100d2c0670c6). We use the reported identifier as data only; no Orecchino code is copied. It is Low confidence and does not decode Remote ID or locate an aircraft. |
+| [Remote ID Radar](https://github.com/justcallmekoko/wifipineapplepager-payloads/tree/submission/remote-id-radar) | Just Call Me Koko | GPL-3.0-only | An independent Python port of the ESP32 Marauder Remote ID decoder and test vectors, reviewed as a cross-check/replay source only. It is specific to the Hak5 Pager, tunes Wi-Fi to channel 6, and uses the existing BLE scanner. No code is copied. Branch commit [`fdabf88`](https://github.com/justcallmekoko/wifipineapplepager-payloads/commit/fdabf882155be0e228a686d168c6e7e6dd3e1abf).
 
 The registries themselves belong to the
 [IEEE Registration Authority](https://standards-oui.ieee.org/oui/oui.csv) and

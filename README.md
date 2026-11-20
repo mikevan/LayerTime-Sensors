@@ -30,6 +30,7 @@ any embedded build that accepts a library.
 | 15 | SamsungTag | BLE | Samsung SmartTag service UUID |
 | 16 | GoogleTag | BLE | Google Find My Device (Eddystone) UUID |
 | 17 | Eapol | Wi-Fi | WPA/RSN 4-way handshake (EAPOL-Key), M1 to M4 (Medium, provisional) |
+| 18 | DjiWifiPresence | Wi-Fi | Low-confidence DJI OUI observed in a beacon or probe response; no aircraft identity, location, or Remote ID claim |
 
 The numbers are stable. Consumers store and transmit them, so a number is
 never reused or changed. They are sparse and start at 5; iterate

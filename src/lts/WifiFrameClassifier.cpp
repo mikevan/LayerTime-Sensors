@@ -124,6 +124,8 @@ void WifiFrameClassifier::classify(const uint8_t *frame, uint16_t length, int8_t
              Confidence::Medium, channel);
     if (frameType == 0 && subtype == 0x08)
         inspectBeacon(frame, length, rssi, channel, nowMs, enabled, sink, sinkContext);
+    else if (frameType == 0 && subtype == 0x05)
+        inspectDjiWifi(frame, length, rssi, channel, enabled, sink, sinkContext);
 
     // Data frames: an unencrypted EAPOL-Key frame is a 4-way handshake step.
     // Medium, not High: it is a real decode, but it reports that a handshake
@@ -140,6 +142,20 @@ void WifiFrameClassifier::classify(const uint8_t *frame, uint16_t length, int8_t
     }
 }
 
+void WifiFrameClassifier::inspectDjiWifi(const uint8_t *frame, uint16_t length, int8_t rssi,
+                                         uint8_t channel, const DetectorSet &enabled,
+                                         CandidateSink sink, void *sinkContext)
+{
+    static const uint8_t djiOui[3] = {0x0C, 0x9A, 0xE6};
+    if (!enabled.contains(DetectorId::DjiWifiPresence) || length < 24 ||
+        memcmp(frame + 10, djiOui, sizeof(djiOui)) != 0)
+        return;
+    char mac[18];
+    formatMac(mac, sizeof(mac), frame + 10);
+    emit(sink, sinkContext, DetectorId::DjiWifiPresence,
+         "DJI Wi-Fi OUI observed; Remote ID not checked", mac, rssi, Confidence::Low, channel);
+}
+
 void WifiFrameClassifier::inspectBeacon(const uint8_t *payload, uint16_t length, int8_t rssi,
                                         uint8_t channel, uint32_t nowMs,
                                         const DetectorSet &enabled, CandidateSink sink,
@@ -147,6 +163,13 @@ void WifiFrameClassifier::inspectBeacon(const uint8_t *payload, uint16_t length,
 {
     if (length < 38) return;
     const uint8_t *bssid = payload + 10;
+    if (enabled.contains(DetectorId::DjiWifiPresence) && bssid[0] == 0x0C &&
+        bssid[1] == 0x9A && bssid[2] == 0xE6) {
+        char djiMac[18];
+        formatMac(djiMac, sizeof(djiMac), bssid);
+        emit(sink, sinkContext, DetectorId::DjiWifiPresence,
+             "DJI Wi-Fi OUI observed; Remote ID not checked", djiMac, rssi, Confidence::Low, channel);
+    }
     char mac[18];
     formatMac(mac, sizeof(mac), bssid);
     static const uint8_t pwnMac[6] = {0xDE,0xAD,0xBE,0xEF,0xDE,0xAD};

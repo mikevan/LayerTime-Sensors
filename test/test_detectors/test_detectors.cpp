@@ -43,7 +43,7 @@ void confidence_source_and_band_numbers_are_stable()
 
 void the_detector_list_is_sparse_unique_and_complete()
 {
-    CHECK_INT(14, kDetectorCount);
+    CHECK_INT(15, kDetectorCount);
     int known = 0;
     for (int v = 0; v <= 255; ++v) {
         const bool listed = [&] {
@@ -54,9 +54,11 @@ void the_detector_list_is_sparse_unique_and_complete()
         CHECK_INT(listed, isKnownDetector(static_cast<uint8_t>(v)));
         if (listed) ++known;
     }
-    CHECK_INT(14, known);
-    // 17 is Eapol and 18 is RemoteId; later values remain unknown.
-    for (int v : {0, 1, 2, 3, 4, 19, 31, 32, 255}) CHECK_FALSE(isKnownDetector(static_cast<uint8_t>(v)));
+    CHECK_INT(15, known);
+    CHECK_INT(18, static_cast<int>(DetectorId::RemoteId));
+    CHECK_INT(19, static_cast<int>(DetectorId::DjiWifiPresence));
+    // 17 through 19 are EAPOL, Remote ID and DJI Wi-Fi presence.
+    for (int v : {0, 1, 2, 3, 4, 20, 31, 32, 255}) CHECK_FALSE(isKnownDetector(static_cast<uint8_t>(v)));
 }
 
 void empty_and_full_sets()

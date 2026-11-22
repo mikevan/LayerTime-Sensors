@@ -53,6 +53,7 @@ enum class DetectorId : uint8_t {
     // ReconTarget gives it 18, since 17 is EarlyWarning there.
     Eapol = 17,
     RemoteId = 18, // Structured, unverified OpenDroneID Basic ID broadcast
+    DjiWifiPresence = 19, // Low-confidence Wi-Fi OUI observation
 };
 
 inline constexpr DetectorId kAllDetectors[] = {
@@ -60,7 +61,7 @@ inline constexpr DetectorId kAllDetectors[] = {
     DetectorId::Flock,   DetectorId::Pineapple,  DetectorId::AirTag,
     DetectorId::Flipper, DetectorId::Meta,       DetectorId::Axon,
     DetectorId::Tile,    DetectorId::SamsungTag, DetectorId::GoogleTag,
-    DetectorId::Eapol, DetectorId::RemoteId,
+    DetectorId::Eapol, DetectorId::RemoteId, DetectorId::DjiWifiPresence,
 };
 
 inline constexpr size_t kDetectorCount = sizeof(kAllDetectors) / sizeof(kAllDetectors[0]);

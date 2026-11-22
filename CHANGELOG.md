@@ -3,6 +3,11 @@
 Every change names the upstream work behind it. See [SOURCES.md](SOURCES.md)
 for who those people are.
 
+## Unreleased
+
+- Keep Remote ID at detector 18 and add low-confidence DJI Wi-Fi presence at
+  detector 19. The Wi-Fi prefix comes from [Orecchino ESP32](https://github.com/isaacbentley/orecchino-esp32).
+
 ## 1.1.2
 
 ### Detection changes
